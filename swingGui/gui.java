@@ -29,7 +29,6 @@ public class gui extends JFrame implements ActionListener{
         addButton(toolbar, openButton, "Open");
     }
     private void addButton(JPanel panel, JButton button, String label) {
-        //Task 5: Follow instructions for Stage 3
         button = new JButton(label);
         panel.add(button);
         button.addActionListener(this);
