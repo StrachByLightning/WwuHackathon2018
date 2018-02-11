@@ -8,6 +8,11 @@ from io import BytesIO
 import PIL.Image
 import PIL.ImageTk
 
+import operator
+
+from bingtts import Translator
+import pygame
+
 
 import matplotlib.pyplot as plt
 from flickrapi import FlickrAPI
@@ -17,6 +22,7 @@ import cv2
 
 from tkinter import *
 import tkinter
+
 
 def text2Speech(sentence):
     engine = pyttsx3.init()
@@ -34,7 +40,16 @@ def text2Speech(sentence):
 
 def get_best_word(sentence):
     sentence = nltk.tokenize.word_tokenize(sentence)
-    return sentence
+    frequency = {}
+    for word in sentence:
+        if word in frequency:
+            frequency[word] += 1
+        else:
+            frequency[word] = 1
+
+    sorted = sorted(frequency.items(), reverse=True, key=operator.itemgetter(1))
+
+    return sorted[0]
 
 # Takes in the sentence. Calculates the best noun to display as an image and goes and gets it using bing image search
 # and then displays it.
@@ -66,15 +81,7 @@ def getImage(search_term):
 
     return image
 
-'''
-img = getImage()
-
-img.show()
-'''
-
 class FullScreenApp(object):
-
-
     def __init__(self, master, **kwargs):
         self.master=master
         pad=3
@@ -95,13 +102,7 @@ class FullScreenApp(object):
         menu = OptionMenu(master, variable, types[0], types[1], types[2])
         menu.pack()
 
-        '''
-        for type in types:
-            self.type = Button(master, text=type, command=self.start)
-            self.type.pack()
-        '''
-
-        self.start_button = Button(master, text="Go!", command=start_storytime)
+        self.start_button = Button(master, text="Go!", command=self.start_storytime)
         self.start_button.pack()
 
         image = getImage("santa")
@@ -112,10 +113,6 @@ class FullScreenApp(object):
         self.panel.configure(image = img)
         self.panel.image = img
 
-        '''
-        self.close_button = Button(master, text="Close", command=master.quit)
-        self.close_button.pack(side=RIGHT, padx=800, pady=50)
-        '''
 
     def switch_picture(self, search_term):
         print("switching")
@@ -131,9 +128,15 @@ class FullScreenApp(object):
         self.master.geometry(self._geom)
         self._geom=geom
 
-    def start(self):
-        # somehow need to get the type from this.
-        print(self)
+    def start_storytime():
+        # Call the function to generate a story
+
+        file = open('generated_story.txt', 'r').readlines()
+
+        for sentence in file:
+            display_picture(sentence, app)
+            text2Speech(sentence[1:-3])  # Reads the sentence outloud
+            time.sleep(1)
 
 
 root=Tk()
@@ -141,17 +144,19 @@ app=FullScreenApp(root)
 root.mainloop()
 #app.switch_picture(search_term)
 
-def start_storytime():
 
-    #Call the function to generate a story
+'''
+speech_subscription_key = '5c610c34de8646a0a455308e1082e1c4'
 
-    file = open('generated_story.txt', 'r').readlines()
+translator = Translator(speech_subscription_key)
+output = translator.speak("This is a text to speech translation", "en-US", "Female", "riff-16khz-16bit-mono-pcm")
+pygame.mixer.init()
+pygame.mixer.music.load("file.wav")
+pygame.mixer.music.play()
+'''
 
-    for sentence in file:
-        display_picture(sentence, app)
-        text2Speech(sentence[1:-3]) #Reads the sentence outloud
-        time.sleep(1)
 
+#5c610c34de8646a0a455308e1082e1c4   bing text to speech
 
 ''' Text to speech stuff
 from urllib import request
