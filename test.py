@@ -2,15 +2,18 @@ import pyttsx3
 import time
 import nltk
 
-from flickrapi import FlickrAPI
+import requests
+from io import BytesIO
+
 import PIL.Image
 import PIL.ImageTk
+
+
+import matplotlib.pyplot as plt
+from flickrapi import FlickrAPI
 import numpy as np
 import urllib.request
 import cv2
-
-import requests
-from io import BytesIO
 
 from tkinter import *
 import tkinter
@@ -30,10 +33,39 @@ def text2Speech(sentence):
 
 file = open('generated_story.txt', 'r')
 
+def get_best_word(sentence):
+    return sentence
+
 # Takes in the sentence. Calculates the best noun to display as an image and goes and gets it using bing image search
 # and then displays it.
 def display_picture(sentence):
-    
+    search_term = get_best_word(sentence)
+
+    image = getImage(search_term)
+
+    #display(image) <--- got to figure out how to display? on python gui or java?
+
+
+def getImage(search_term):
+    subscription_key = 'ecda2ab9abe346a0a2c8610fdc99ad54'
+    assert subscription_key
+
+    search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
+
+    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
+    params = {"q": search_term, "license": "public", "imageType": "photo"}
+    response = requests.get(search_url, headers=headers, params=params)
+    response.raise_for_status()
+    search_results = response.json()
+
+    thumbnail_urls = [img["thumbnailUrl"] for img in search_results["value"][:16]]
+
+    image_data = requests.get(thumbnail_urls[0])
+    image_data.raise_for_status()
+    image = PIL.Image.open(BytesIO(image_data.content))
+
+    return image
+
 
 for sentence in file:
     sentence = nltk.tokenize.word_tokenize(sentence)
@@ -42,7 +74,12 @@ for sentence in file:
     time.sleep(1)
 
 
-import matplotlib.pyplot as plt
+img = getImage()
+
+img.show()
+
+
+
 
 '''
 def url_to_image(url):
@@ -156,32 +193,6 @@ app=FullScreenApp(root)
 root.mainloop()
 '''
 
-
-def getImage():
-    subscription_key = 'ecda2ab9abe346a0a2c8610fdc99ad54'
-    assert subscription_key
-
-    search_url = "https://api.cognitive.microsoft.com/bing/v7.0/images/search"
-
-    search_term = "santa"
-
-    headers = {"Ocp-Apim-Subscription-Key": subscription_key}
-    params = {"q": search_term, "license": "public", "imageType": "photo"}
-    response = requests.get(search_url, headers=headers, params=params)
-    response.raise_for_status()
-    search_results = response.json()
-
-    thumbnail_urls = [img["thumbnailUrl"] for img in search_results["value"][:16]]
-
-    image_data = requests.get(thumbnail_urls[0])
-    image_data.raise_for_status()
-    image = PIL.Image.open(BytesIO(image_data.content))
-
-    return image
-
-img = getImage()
-
-img.show()
 
 ''' Text to speech stuff
 from urllib import request
