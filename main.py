@@ -8,6 +8,11 @@ from io import BytesIO
 import PIL.Image
 import PIL.ImageTk
 
+import operator
+
+from bingtts import Translator
+import pygame
+
 
 import matplotlib.pyplot as plt
 from flickrapi import FlickrAPI
@@ -17,6 +22,7 @@ import cv2
 
 from tkinter import *
 import tkinter
+
 
 def text2Speech(sentence):
     engine = pyttsx3.init()
@@ -34,7 +40,16 @@ def text2Speech(sentence):
 
 def get_best_word(sentence):
     sentence = nltk.tokenize.word_tokenize(sentence)
-    return sentence
+    frequency = {}
+    for word in sentence:
+        if word in frequency:
+            frequency[word] += 1
+        else:
+            frequency[word] = 1
+
+    sorted = sorted(frequency.items(), reverse=True, key=operator.itemgetter(1))
+
+    return sorted[0]
 
 # Takes in the sentence. Calculates the best noun to display as an image and goes and gets it using bing image search
 # and then displays it.
@@ -66,15 +81,7 @@ def getImage(search_term):
 
     return image
 
-'''
-img = getImage()
-
-img.show()
-'''
-
 class FullScreenApp(object):
-
-
     def __init__(self, master, **kwargs):
         self.master=master
         pad=3
@@ -83,19 +90,19 @@ class FullScreenApp(object):
             master.winfo_screenwidth()-pad, master.winfo_screenheight()-pad))
         master.bind('<Escape>',self.toggle_geom)
 
-        master.title("Imagination Unleashed")
-        self.label = Label(master, text="Welcome to Imagination Unleashed! Please select the type of story you'd like!")
+        master.title("Pure Imagination Unleashed")
+        self.label = Label(master, text="Welcome to Pure Imagination Unleashed! Please select the type of story you'd like!")
         self.label.pack()
 
+        # Generate drop down to select type
         types = ["alice and wonderland", "harry potter", "pirates"]
-        for type in types:
-            self.type = Button(master, text=type, command=self.start)
-            self.type.pack()
+        variable = StringVar(master)
+        variable.set(types[0])
 
-        self.close_button = Button(master, text="Close", command=master.quit)
-        self.close_button.pack()
+        menu = OptionMenu(master, variable, types[0], types[1], types[2])
+        menu.pack()
 
-        self.start_button = Button(master, text="Go!", command=self.start)
+        self.start_button = Button(master, text="Go!", command=self.start_storytime)
         self.start_button.pack()
 
         image = getImage("santa")
@@ -105,6 +112,7 @@ class FullScreenApp(object):
         self.panel.place(x=700, y=300)
         self.panel.configure(image = img)
         self.panel.image = img
+
 
     def switch_picture(self, search_term):
         print("switching")
@@ -120,9 +128,15 @@ class FullScreenApp(object):
         self.master.geometry(self._geom)
         self._geom=geom
 
-    def start(self):
-        # somehow need to get the type from this.
-        print(self)
+    def start_storytime():
+        # Call the function to generate a story
+
+        file = open('generated_story.txt', 'r').readlines()
+
+        for sentence in file:
+            display_picture(sentence, app)
+            text2Speech(sentence[1:-3])  # Reads the sentence outloud
+            time.sleep(1)
 
 
 root=Tk()
@@ -130,53 +144,19 @@ app=FullScreenApp(root)
 root.mainloop()
 #app.switch_picture(search_term)
 
-file = open('generated_story.txt', 'r').readlines()
-
-for sentence in file:
-    display_picture(sentence, app)
-    text2Speech(sentence[1:-3]) #Reads the sentence outloud
-    time.sleep(1)
 
 '''
-def url_to_image(url):
-    resp = urllib.request.urlopen(url)
-    image = np.asarray(bytearray(resp.read()), dtype="uint8")
-    #image = cv2.imdecode(image, cv2.IMREAD_COLOR)
-    image = Image.fromarray(image, 'RGB')
+speech_subscription_key = '5c610c34de8646a0a455308e1082e1c4'
 
-    return image
-
-
-
-
-FLICKR_PUBLIC = '6fdf088b862a49a3ae1e678296c00936'
-FLICKR_SECRET = '605ede6b9004a09e'
-
-flickr = FlickrAPI(FLICKR_PUBLIC, FLICKR_SECRET, format='parsed-json')
-extras='url_sq,url_t,url_s,url_q,url_m,url_n,url_z,url_c,url_l,url_o'
-
-cats = flickr.photos.search(tags='grass', per_page=5, extras=extras)
-
-photos = cats['photos']
-from pprint import pprint
-pprint(photos)
-
-photoUrl = photos['photo'][0]['url_m']
-
-response = requests.get(photoUrl)
-image = Image.open(BytesIO(response.content))
-
-
-
-#image = url_to_image(photoUrl)
-
-#cv2.imshow("Image", image)
-#cv2.waitKey(0)
-
-#image.show()
-
+translator = Translator(speech_subscription_key)
+output = translator.speak("This is a text to speech translation", "en-US", "Female", "riff-16khz-16bit-mono-pcm")
+pygame.mixer.init()
+pygame.mixer.music.load("file.wav")
+pygame.mixer.music.play()
 '''
 
+
+#5c610c34de8646a0a455308e1082e1c4   bing text to speech
 
 ''' Text to speech stuff
 from urllib import request
