@@ -1,5 +1,5 @@
 default:
-	python3	funFUN.py
+	python3	driver.py
 
 
 run:

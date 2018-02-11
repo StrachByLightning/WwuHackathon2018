@@ -3,7 +3,7 @@ from re import search
 import os
 
 def textProcess(fileName):
-    ## DOING 4-GRAMS => 3 <s>
+    ## DOING 6-GRAMS => 5 <s>
 
     ## ADD <s> and </s> TO EACH LINE
 
