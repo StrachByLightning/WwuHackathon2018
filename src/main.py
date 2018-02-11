@@ -13,15 +13,15 @@ import operator
 from bingtts import Translator
 import pygame
 
-
-import matplotlib.pyplot as plt
-from flickrapi import FlickrAPI
-import numpy as np
-import urllib.request
-import cv2
+import os
 
 from tkinter import *
 import tkinter
+
+from bin import getStory, docFormatter, modelGenerator, driver, speechOutput
+
+
+getStory.getStory()
 
 
 def text2Speech(sentence):
@@ -42,14 +42,14 @@ def get_best_word(sentence):
     sentence = nltk.tokenize.word_tokenize(sentence)
     frequency = {}
     for word in sentence:
-        if word in frequency:
+        if word in frequency and word.isalpha():
             frequency[word] += 1
         else:
             frequency[word] = 1
 
-    sorted = sorted(frequency.items(), reverse=True, key=operator.itemgetter(1))
+    sorted_words = sorted(frequency.items(), reverse=True, key=operator.itemgetter(1))
 
-    return sorted[0]
+    return sorted_words[0][0]
 
 # Takes in the sentence. Calculates the best noun to display as an image and goes and gets it using bing image search
 # and then displays it.
@@ -95,17 +95,19 @@ class FullScreenApp(object):
         self.label.pack()
 
         # Generate drop down to select type
-        types = ["alice and wonderland", "harry potter", "pirates"]
+        all_stories = self.all_stories()
         variable = StringVar(master)
-        variable.set(types[0])
+        variable.set(all_stories[0])
 
-        menu = OptionMenu(master, variable, types[0], types[1], types[2])
+        menu = OptionMenu(master, variable, all_stories[0], all_stories[1], all_stories[2], command=self.start_storytime)
         menu.pack()
 
+        '''
         self.start_button = Button(master, text="Go!", command=self.start_storytime)
         self.start_button.pack()
+        '''
 
-        image = getImage("santa")
+        image = getImage("Book")
 
         img = PIL.ImageTk.PhotoImage(image)
         self.panel = tkinter.Label(root, image=img)
@@ -113,14 +115,28 @@ class FullScreenApp(object):
         self.panel.configure(image = img)
         self.panel.image = img
 
+    def all_stories(self):
+        #os.chdir('resources')
+        print(os.getcwd())
+        file = open('listOfFiles.txt', 'r')
+        all_stories = []
+
+        for story in file:
+            if story == '\n':
+                continue
+            all_stories.append(story)
+
+        return all_stories
+
 
     def switch_picture(self, search_term):
         print("switching")
+        print(search_term)
         image2 = getImage(search_term)
         image2 = PIL.ImageTk.PhotoImage(image2)
         self.panel.configure(image=image2)
         self.panel.image = image2
-        self.panel.place(x=700, y=300)
+        self.panel.place(x=700, y=100)
 
     def toggle_geom(self,event):
         geom=self.master.winfo_geometry()
@@ -128,10 +144,17 @@ class FullScreenApp(object):
         self.master.geometry(self._geom)
         self._geom=geom
 
-    def start_storytime():
+    def start_storytime(self, textfile):
         # Call the function to generate a story
+        print(textfile)
+        docFormatter.textProcess(textfile.replace('\n',''))
+        print(os.getcwd())
+        #os.chdir('')
+        freqDict = modelGenerator.modelGenerator()
+        driver.generateStory(freqDict)
+        speechOutput.speechOutput()
 
-        file = open('generated_story.txt', 'r').readlines()
+        file = open('finalOutput.txt', 'r').readlines()
 
         for sentence in file:
             display_picture(sentence, app)

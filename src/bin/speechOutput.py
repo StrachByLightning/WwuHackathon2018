@@ -1,6 +1,8 @@
-
+import os
 
 def speechOutput():
+    if(os.getcwd()[-3:] != 'bin'):
+        os.chdir('bin')
 
     story = open('generated_story.txt','r')
     final = open('finalOutput.txt','w')

@@ -1,9 +1,8 @@
-from docFormatter import textProcess
-from modelGenerator import modelGenerator
-from speechOutput import speechOutput
+#from modelGenerator import modelGenerator
+
 import os
 import random
-
+'''
 def processAllFiles():
     #go in to resources to grab the list of files
     os.chdir('..')
@@ -37,7 +36,7 @@ def processAllFiles():
     for e in freqDist:
         test.write(str(e) + '\n')
     ###############################
-
+'''
 
 def generateStory(freqDist):
     allElements = []
